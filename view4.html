@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Bootstrap Example</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+    <style>
+        .draggable_htmlCode {
+            transition: 0.5s;
+            cursor: grab;
+            position: relative;
+            padding: 1rem 3rem;
+        }
+        
+        .dragging_htmlCode {
+            opacity: 0.9;
+            background: grey;
+        }
+        
+        #showModelB4Del {
+            padding: 10px 50px!important;
+            max-width: 500px;
+            max-height: 300px;
+            background: #edebee;
+            color: black;
+            border: 5px solid black;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: none;
+            z-index: 99999999999999999999999999999;
+        }
+        
+        .closModalMsg {
+            padding: 0.3rem 0.5rem;
+            border-radius: 7px;
+            background: red;
+            color: white;
+            position: absolute;
+            top: 0px;
+            right: 2px;
+            cursor: pointer;
+        }
+        
+        .b4Remove {
+            transform: translateX(600px);
+            opacity: 0.3;
+            background: black!important;
+        }
+        
+        #table_appendHTML tr {
+            transition: 0.5s
+        }
+        
+        table tr {
+            transition: 0.5s
+        }
+        
+        .activelyMoving {
+            background: #c3c3c3
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+
+
+        <div class="card">
+            <div class="card-header">
+                HTML Code
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label for="heading">Heading:</label>
+                    <input type="text" class="form-control" placeholder="Enter Heading" id="heading">
+                </div>
+                <div class="row">
+                    <div class="col-md-5">
+                        <div class="form-group">
+                            <label for="Description">Description:</label>
+                            <textarea class="form-control" rows="3" id="Description" placeholder="Enter Description"></textarea>
+                        </div>
+                    </div>
+                    <div class="col-md-5">
+                        <div class="form-group">
+                            <label for="htmlCode">HTML Code:</label>
+                            <textarea class="form-control" rows="3" id="htmlCode" placeholder="Enter HTML Code"></textarea>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <button class='btn btn-primary addHTMLCode'>Add</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <div class="card">
+            <div class="card-header">
+                Added Html Code
+            </div>
+            <div class="card-body">
+                <table class="table" id='table_appendHTML'>
+                    <thead>
+                        <tr>
+                            <th>Action</th>
+                            <th>Heading</th>
+                            <th>Description</th>
+                            <th>HTML Code</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+
+                    </tbody>
+                </table>
+            </div>
+            <div class="card-footer">
+                <div class="text-right">
+                    <button class='btn btn-success'>Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- modal for edit remark -->
+    <div id="showModelB4Del" class="px-2 py-2">
+        <h4>Are You Sure, You want to delete.</h4>
+        <div class="d-flex">
+            <a href="javascript:void(0)" id="yesDelContact" class="btn btn-success mr-3">Yes</a>
+            <!-- <a href="javascript:void(0)" id='NoDelContact' class="btn btn-danger">No</a> -->
+        </div>
+        <span class="closModalMsg" id='closModalMsg'>X</span>
+    </div>
+
+    <script>
+        addBTNHTMLCode = document.getElementsByClassName('addHTMLCode')[0];
+        addBTNHTMLCode.addEventListener('click', function() {
+
+            heading = document.getElementById('heading');
+            Description = document.getElementById('Description');
+            htmlCode = document.getElementById('htmlCode');
+
+            if (isEmpty(heading.value) || isEmpty(Description.value) || isEmpty(htmlCode.value)) {
+                alert('Please, Enter all fields')
+                return
+            } else {
+
+                tbody = document.querySelector('#table_appendHTML tbody')
+
+                tbody.innerHTML += `
+                          <tr class="draggable_htmlCode"  draggable="true"> 
+                            <td> 
+                                <button class='btn btn-primary ClickUP_code'> <i class="fa fa-chevron-up" aria-hidden="true"></i></button> <br>
+                                   <button class='btn btn-primary mt-1 ClickDOWN_code'> <i class="fa fa-chevron-down" aria-hidden="true"></i></button>
+                             </td>
+                            <td>${heading.value}</td>
+                            <td>${Description.value}</td>
+                            <td>${htmlCode.value}</td>
+                            <td>
+                                <button class='btn btn-danger removeAppendedTRs'><i class="fa fa-trash" aria-hidden="true"></i>  </button>
+                            </td>
+                        </tr>`
+
+                heading.value = '';
+                Description.value = '';
+                htmlCode.value = '';
+
+                onClickMoveUPorDOWN_code()
+
+                // ############## remove with modal ##############
+                removeAppendedTRs = document.querySelectorAll('.removeAppendedTRs')
+                removeAppendedTRs.forEach(function(onebyone) {
+                        onebyone.addEventListener('click', function() {
+
+
+                            document.getElementById('showModelB4Del').style.display = 'flex';
+                            appendedField = onebyone.parentElement.parentElement;
+                            document.getElementById('showModelB4Del').addEventListener('click', function(e) {
+                                if (e.target.classList[0] == 'closModalMsg') {
+                                    closeIT = e.target;
+                                    document.getElementById('showModelB4Del').style.display = 'none';
+                                } else if (e.target.id == 'yesDelContact') {
+                                    appendedField.classList.add('b4Remove')
+
+                                    setTimeout(function() {
+                                        appendedField.addEventListener('transitionend', function() {
+                                            appendedField.remove();
+
+                                        })
+
+                                    }, 500)
+
+
+
+                                    document.getElementById('showModelB4Del').style.display = 'none';
+
+
+
+                                }
+
+                            })
+
+                        })
+
+                    })
+                    // ################ remove with modal ends #################
+
+                draggable_htmlCode = document.querySelectorAll('.draggable_htmlCode')
+
+
+
+                draggable_htmlCode.forEach(draggable_htmlCode => {
+
+                    draggable_htmlCode.addEventListener('dragstart', function() {
+
+                        this.classList.add('dragging_htmlCode')
+                    })
+
+                    draggable_htmlCode.addEventListener('dragend', function() {
+                        this.classList.remove('dragging_htmlCode')
+                    })
+                })
+
+                tbody.addEventListener('dragover', function(e) {
+                    e.preventDefault();
+                    dragging_htmlCode = document.querySelector('.dragging_htmlCode');
+                    appendBeforeEL = findElementToAppend(e.clientY)
+                        // contactFormHolder.appendChild(dragging_htmlCode)
+                    tbody.insertBefore(dragging_htmlCode, appendBeforeEL);
+                })
+
+
+            }
+        })
+
+
+        function isEmpty(str) {
+
+            return !str.trim().length;
+
+        }
+
+
+
+        function findElementToAppend(y) {
+            alldraggable_singlePageEl = [...document.querySelectorAll('.draggable_htmlCode:not(.dragging_htmlCode)')];
+            return alldraggable_singlePageEl.reduce((closest, child) => {
+                box = child.getBoundingClientRect();
+                offset = y - box.top - box.height / 2;
+
+                if (offset < 0 && offset > closest.offset) {
+                    return {
+                        offset: offset,
+                        element: child
+                    }
+                } else {
+                    return closest;
+                }
+            }, {
+                offset: Number.NEGATIVE_INFINITY
+            }).element
+        }
+
+
+
+
+        // ####################### move up and down ########################
+        onClickMoveUPorDOWN_code()
+
+        function onClickMoveUPorDOWN_code() {
+
+            targetToAppend = document.querySelector('#table_appendHTML tbody')
+            var btn_moveDOWN_code = [...document.getElementsByClassName('ClickDOWN_code')]
+            var btn_moveUP_code = [...document.getElementsByClassName('ClickUP_code')]
+
+            btn_moveUP_code.forEach(onebyone => {
+
+                onebyone.addEventListener('click', ChangePositionUP_code)
+
+            })
+
+            btn_moveDOWN_code.forEach(onebyone => {
+                onebyone.addEventListener('click', ChangePositionDOWN_code)
+
+            })
+
+
+        }
+
+        function ChangePositionUP_code() {
+
+            CurrentElement_TOMOVE = this.parentElement.parentElement;
+            activeClass = document.getElementsByClassName("activelyMoving");
+            for (i = 0; i < activeClass.length; i++) {
+
+                activeClass[i].className = activeClass[i].className.replace("activelyMoving", "");
+            }
+
+            this.parentElement.parentElement.classList.add('activelyMoving')
+            previousElement_TOMOVE = CurrentElement_TOMOVE.previousElementSibling;
+            if (previousElement_TOMOVE != null) {
+                targetToAppend.insertBefore(CurrentElement_TOMOVE, previousElement_TOMOVE);
+            } else {
+                alert('cannot Move Further')
+            }
+        }
+
+
+        function ChangePositionDOWN_code() {
+            CurrentElement_TOMOVE = this.parentElement.parentElement;
+            activeClass = document.getElementsByClassName("activelyMoving");
+            for (i = 0; i < activeClass.length; i++) {
+
+                activeClass[i].className = activeClass[i].className.replace("activelyMoving", "");
+            }
+
+            this.parentElement.parentElement.classList.add('activelyMoving')
+            nextElement_TOMOVE = CurrentElement_TOMOVE.nextElementSibling;
+            if (nextElement_TOMOVE != null) {
+                targetToAppend.insertBefore(nextElement_TOMOVE, CurrentElement_TOMOVE);
+            } else {
+                alert('cannot Move Below')
+            }
+        }
+    </script>
+</body>
+
+</html>
